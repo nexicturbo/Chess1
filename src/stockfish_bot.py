@@ -1263,7 +1263,8 @@ class StockfishBot(multiprocess.Process):
                     return {
                         found: true,
                         action: "found_connection_lost",
-                        message: "Found connection lost message but no button to click"
+                        message:
+                            "Found connection lost message but no button to click"
                     };
                 }
                 
@@ -1279,9 +1280,13 @@ class StockfishBot(multiprocess.Process):
                     };
                 }
                 
-                // 4. Check for lag indicator (severe lag might require a page refresh)
+                // 4. Check for lag indicator (severe lag might require a page
+                // refresh)
                 const lagIndicator = document.querySelector('.lag');
-                if (lagIndicator && lagIndicator.classList.contains('severe')) {
+                if (
+                    lagIndicator &&
+                    lagIndicator.classList.contains('severe')
+                ) {
                     return {
                         found: true,
                         action: "severe_lag",
@@ -1290,8 +1295,14 @@ class StockfishBot(multiprocess.Process):
                 }
                 
                 // 5. Check for socket disconnected message in console or page
-                const socketDisconnected = document.body.innerText.toLowerCase().includes('socket disconnected') || 
-                                          document.body.innerText.toLowerCase().includes('connection lost');
+                const socketDisconnected = (
+                    document.body.innerText
+                        .toLowerCase()
+                        .includes('socket disconnected') ||
+                    document.body.innerText
+                        .toLowerCase()
+                        .includes('connection lost')
+                );
                 if (socketDisconnected) {
                     return {
                         found: true,
@@ -1313,11 +1324,21 @@ class StockfishBot(multiprocess.Process):
                 action = result.get('action')
                 
                 # Handle different types of connection issues
-                if action in ["clicked_reconnect", "clicked_connection_lost_button", "clicked_reload"]:
-                    print("Clicked button to address connection issue, waiting for reconnection...")
+                if action in [
+                    "clicked_reconnect",
+                    "clicked_connection_lost_button",
+                    "clicked_reload",
+                ]:
+                    print(
+                        "Clicked button to address connection issue, waiting for reconnection..."
+                    )
                     time.sleep(3)  # Wait for reconnection
                     return True
-                elif action in ["found_connection_lost", "socket_disconnected", "severe_lag"]:
+                elif action in [
+                    "found_connection_lost",
+                    "socket_disconnected",
+                    "severe_lag",
+                ]:
                     print("Detected connection issue requiring page refresh...")
                     self.grabber.chrome.refresh()
                     time.sleep(3)  # Wait for page to reload
