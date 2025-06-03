@@ -1,6 +1,7 @@
 multiprocess~=0.70.14
 selenium==4.9.1
 webdriver-manager==4.0.1
+chromedriver-autoinstaller==0.6.4
 PyAutoGUI~=0.9.53
 chess==1.10.0
 stockfish~=3.28.0
