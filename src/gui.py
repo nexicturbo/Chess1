@@ -7,6 +7,7 @@ from tkinter import ttk, filedialog, messagebox
 from selenium import webdriver
 from selenium.common import WebDriverException
 from selenium.webdriver.chrome.service import Service
+from webdriver_manager.chrome import ChromeDriverManager
 import keyboard
 from overlay import run  # Ensure overlay.py exists and defines run()
 from stockfish_bot import StockfishBot  # Ensure stockfish_bot.py exists and defines StockfishBot
@@ -414,7 +415,7 @@ class GUI:
         options.add_argument('--disable-blink-features=AutomationControlled')
         options.add_experimental_option('useAutomationExtension', False)
         try:
-            service = Service(executable_path=r"C:\Users\Turbo\Downloads\chess-auto-bot-main\chess-auto-bot-main\venv\Scripts\chromedriver.exe")
+            service = Service(ChromeDriverManager().install())
             self.chrome = webdriver.Chrome(service=service, options=options)
         except WebDriverException:
             self.opening_browser = False

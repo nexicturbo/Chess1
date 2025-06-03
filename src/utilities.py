@@ -1,5 +1,5 @@
-from selenium.webdriver.remote.webdriver import WebDriver
 from selenium import webdriver
+from selenium.webdriver.remote.webdriver import WebDriver
 
 
 # Converts a chess character into an int
