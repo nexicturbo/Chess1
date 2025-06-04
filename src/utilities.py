@@ -1,5 +1,5 @@
-from selenium.webdriver.remote.webdriver import WebDriver
 from selenium import webdriver
+from selenium.webdriver.remote.webdriver import WebDriver
 
 
 # Converts a chess character into an int
@@ -23,7 +23,10 @@ def attach_to_session(executor_url, session_id):
 
     # Patch the function before creating the driver object
     WebDriver.execute = new_command_execute
-    driver = webdriver.Remote(command_executor=executor_url, desired_capabilities={})
+    driver = webdriver.Remote(
+        command_executor=executor_url,
+        desired_capabilities={},
+    )
     driver.session_id = session_id
 
     # Replace the patched function with original function

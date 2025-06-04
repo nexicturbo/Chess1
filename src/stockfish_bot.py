@@ -39,9 +39,51 @@ class StockfishBot(multiprocess.Process):
         self.is_white = None
         self.board = None  # Add board as instance variable
 
+        # Alias for clarity
+        self.use_mouseless = enable_mouseless_mode
+
+        # Initialize Stockfish engine with provided parameters
+        self.stockfish = Stockfish(path=self.stockfish_path,
+                                   depth=self.stockfish_depth,
+                                   parameters={
+                                       "Threads": self.cpu_threads,
+                                       "Hash": self.memory,
+                                   })
+        self.stockfish.set_skill_level(self.skill_level)
+
         # Configure pyautogui for human-like movement
         pyautogui.FAILSAFE = False
         pyautogui.PAUSE = 0
+
+    def update_grabber(self):
+        """Attach to the existing Chrome session and update helper info."""
+        if self.website == "chesscom":
+            self.grabber = ChesscomGrabber(self.chrome_url, self.chrome_session_id)
+        else:
+            self.grabber = LichessGrabber(self.chrome_url, self.chrome_session_id)
+        self.grabber.update_board_elem()
+        self.is_white = self.grabber.is_white()
+
+    def get_stockfish_move(self):
+        """Return the best move suggested by the Stockfish engine."""
+        try:
+            return self.stockfish.get_best_move()
+        except Exception as e:  # pragma: no cover - just a safety net
+            print(f"Error getting Stockfish move: {e}")
+            return ""
+
+    def wait_for_turn(self):
+        """Block until it's our turn to move based on move count and color."""
+        while True:
+            try:
+                moves = self.grabber.get_move_list() or []
+                if (len(moves) % 2 == 0 and self.is_white) or (
+                    len(moves) % 2 == 1 and not self.is_white
+                ):
+                    return
+            except Exception:
+                pass
+            time.sleep(0.1)
 
     def move_to_screen_pos(self, square):
         """
@@ -1263,7 +1305,8 @@ class StockfishBot(multiprocess.Process):
                     return {
                         found: true,
                         action: "found_connection_lost",
-                        message: "Found connection lost message but no button to click"
+                        message:
+                            "Found connection lost message but no button to click"
                     };
                 }
                 
@@ -1279,9 +1322,13 @@ class StockfishBot(multiprocess.Process):
                     };
                 }
                 
-                // 4. Check for lag indicator (severe lag might require a page refresh)
+                // 4. Check for lag indicator (severe lag might require a page
+                // refresh)
                 const lagIndicator = document.querySelector('.lag');
-                if (lagIndicator && lagIndicator.classList.contains('severe')) {
+                if (
+                    lagIndicator &&
+                    lagIndicator.classList.contains('severe')
+                ) {
                     return {
                         found: true,
                         action: "severe_lag",
@@ -1290,8 +1337,14 @@ class StockfishBot(multiprocess.Process):
                 }
                 
                 // 5. Check for socket disconnected message in console or page
-                const socketDisconnected = document.body.innerText.toLowerCase().includes('socket disconnected') || 
-                                          document.body.innerText.toLowerCase().includes('connection lost');
+                const socketDisconnected = (
+                    document.body.innerText
+                        .toLowerCase()
+                        .includes('socket disconnected') ||
+                    document.body.innerText
+                        .toLowerCase()
+                        .includes('connection lost')
+                );
                 if (socketDisconnected) {
                     return {
                         found: true,
@@ -1313,11 +1366,21 @@ class StockfishBot(multiprocess.Process):
                 action = result.get('action')
                 
                 # Handle different types of connection issues
-                if action in ["clicked_reconnect", "clicked_connection_lost_button", "clicked_reload"]:
-                    print("Clicked button to address connection issue, waiting for reconnection...")
+                if action in [
+                    "clicked_reconnect",
+                    "clicked_connection_lost_button",
+                    "clicked_reload",
+                ]:
+                    print(
+                        "Clicked button to address connection issue, waiting for reconnection..."
+                    )
                     time.sleep(3)  # Wait for reconnection
                     return True
-                elif action in ["found_connection_lost", "socket_disconnected", "severe_lag"]:
+                elif action in [
+                    "found_connection_lost",
+                    "socket_disconnected",
+                    "severe_lag",
+                ]:
                     print("Detected connection issue requiring page refresh...")
                     self.grabber.chrome.refresh()
                     time.sleep(3)  # Wait for page to reload
