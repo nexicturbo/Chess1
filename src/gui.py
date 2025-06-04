@@ -342,7 +342,7 @@ class GUI:
             try:
                 if self.stockfish_bot_pipe is not None and self.stockfish_bot_pipe.poll():
                     data = self.stockfish_bot_pipe.recv()
-                    
+
                     # For tournament mode, we always want to process these messages
                     if data.startswith("START"):
                         self.clear_tree()
@@ -461,14 +461,14 @@ class GUI:
         if self.enable_premoves_mode.get() and self.enable_mouseless_mode.get():
             messagebox.showerror("Error", "PreMoves Mode and Mouseless Mode cannot be used together")
             return
-            
+
         # Set tournament mode flag based on current state
         self.is_tournament_mode = self.website.get() == "lichess" and self.enable_tournament_mode.get()
-            
+
         parent_conn, child_conn = multiprocess.Pipe()
         self.stockfish_bot_pipe = parent_conn
         st_ov_queue = multiprocess.Queue()
-        
+
         # Pass tournament mode flag to StockfishBot
         self.stockfish_bot_process = StockfishBot(
             self.chrome_url,
