@@ -39,9 +39,51 @@ class StockfishBot(multiprocess.Process):
         self.is_white = None
         self.board = None  # Add board as instance variable
 
+        # Alias for clarity
+        self.use_mouseless = enable_mouseless_mode
+
+        # Initialize Stockfish engine with provided parameters
+        self.stockfish = Stockfish(path=self.stockfish_path,
+                                   depth=self.stockfish_depth,
+                                   parameters={
+                                       "Threads": self.cpu_threads,
+                                       "Hash": self.memory,
+                                   })
+        self.stockfish.set_skill_level(self.skill_level)
+
         # Configure pyautogui for human-like movement
         pyautogui.FAILSAFE = False
         pyautogui.PAUSE = 0
+
+    def update_grabber(self):
+        """Attach to the existing Chrome session and update helper info."""
+        if self.website == "chesscom":
+            self.grabber = ChesscomGrabber(self.chrome_url, self.chrome_session_id)
+        else:
+            self.grabber = LichessGrabber(self.chrome_url, self.chrome_session_id)
+        self.grabber.update_board_elem()
+        self.is_white = self.grabber.is_white()
+
+    def get_stockfish_move(self):
+        """Return the best move suggested by the Stockfish engine."""
+        try:
+            return self.stockfish.get_best_move()
+        except Exception as e:  # pragma: no cover - just a safety net
+            print(f"Error getting Stockfish move: {e}")
+            return ""
+
+    def wait_for_turn(self):
+        """Block until it's our turn to move based on move count and color."""
+        while True:
+            try:
+                moves = self.grabber.get_move_list() or []
+                if (len(moves) % 2 == 0 and self.is_white) or (
+                    len(moves) % 2 == 1 and not self.is_white
+                ):
+                    return
+            except Exception:
+                pass
+            time.sleep(0.1)
 
     def move_to_screen_pos(self, square):
         """
