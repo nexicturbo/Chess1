@@ -18,18 +18,23 @@ Note that the mouse is being moved by python
    **Note** that on Linux systems you must manually add execute permissions to the stockfish executable
 3) Open a Terminal
 4) `cd chess-auto-bot`
-5) Windows: `python -m venv venv`  
+5) Windows: `python -m venv venv`
    Linux: `python3 -m venv venv`
-6) Windows: `venv\Scripts\pip.exe install -r requirements.txt`  
+6) Windows: `venv\Scripts\pip.exe install -r requirements.txt`
    Linux: `venv/bin/pip3 install -r requirements.txt`
+   Alternatively on Windows you can simply run `run.bat` which will create the
+   virtual environment and install the requirements for you.
 
 ## How to use
 1) Open a Terminal
 2) `cd chess-auto-bot`
-3) Windows: `venv\Scripts\python.exe src\gui.py`  
+3) Windows: run `run.bat` or `venv\Scripts\python.exe src\gui.py`
    Linux: `venv/bin/python3 src/gui.py`
 4) Click Select Stockfish on the GUI that opens. This will open a file explorer. Navigate to the folder where you downloaded Stockfish and select the Stockfish executable.
-5) Click Open Browser. This will open ChromeDriver and load the selected chess website.
+5) Click Open Browser. The program will automatically download the correct
+   ChromeDriver for your installed Chrome version (using `chromedriver-autoinstaller`)
+   and load the selected chess website. If that fails, it falls back to the
+   `webdriver-manager` package to fetch a compatible driver.
 6) Navigate to a live match (online or vs bot)
 7) Click Start (or press 1)
 8) Enjoy  
