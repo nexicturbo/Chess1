@@ -1,12 +1,12 @@
-import multiprocessing
 import multiprocess
 import threading
 import time
 import tkinter as tk
 from tkinter import ttk, filedialog, messagebox
 from selenium import webdriver
-from selenium.common import WebDriverException
 from selenium.webdriver.chrome.service import Service
+from webdriver_manager.chrome import ChromeDriverManager
+import chromedriver_autoinstaller  # automatically installs matching ChromeDriver
 import keyboard
 from overlay import run  # Ensure overlay.py exists and defines run()
 from stockfish_bot import StockfishBot  # Ensure stockfish_bot.py exists and defines StockfishBot
@@ -414,15 +414,25 @@ class GUI:
         options.add_argument('--disable-blink-features=AutomationControlled')
         options.add_experimental_option('useAutomationExtension', False)
         try:
-            service = Service(executable_path=r"C:\Users\Turbo\Downloads\chess-auto-bot-main\chess-auto-bot-main\venv\Scripts\chromedriver.exe")
+            # Install a driver that matches the local Chrome version
+            driver_path = chromedriver_autoinstaller.install()
+            service = Service(driver_path)
             self.chrome = webdriver.Chrome(service=service, options=options)
-        except WebDriverException:
-            self.opening_browser = False
-            self.open_browser_button["text"] = "Open Browser"
-            self.open_browser_button["state"] = "normal"
-            self.open_browser_button.update()
-            messagebox.showerror("Error", "Cant find Chrome. You need to have Chrome installed for this to work.")
-            return
+        except Exception:
+            # Fall back to webdriver-manager if auto install fails
+            try:
+                service = Service(ChromeDriverManager().install())
+                self.chrome = webdriver.Chrome(service=service, options=options)
+            except Exception:
+                self.opening_browser = False
+                self.open_browser_button["text"] = "Open Browser"
+                self.open_browser_button["state"] = "normal"
+                self.open_browser_button.update()
+                messagebox.showerror(
+                    "Error",
+                    "Failed to launch Chrome. Make sure it is installed."
+                )
+                return
         if self.website.get() == "chesscom":
             self.chrome.get("https://www.chess.com")
         else:
